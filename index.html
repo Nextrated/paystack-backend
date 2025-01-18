@@ -91,6 +91,13 @@
             <button onclick="initiatePayment()">Pay ₦400</button>
             <p class="status" id="status4"></p>
         </div>
+
+        <!-- Step 5: Success Message -->
+        <div class="step" id="step5">
+            <h3>🎉 Profile Updated Successfully!</h3>
+            <p>Your profile has been updated, and your payment was successful.</p>
+            <a href="index.html"><button>Go Back</button></a>
+        </div>
     </div>
 
     <script>
@@ -102,7 +109,9 @@
         function showNextStep() {
             document.getElementById(`step${step}`).classList.remove("active");
             step++;
-            document.getElementById(`step${step}`).classList.add("active");
+            if (document.getElementById(`step${step}`)) {
+                document.getElementById(`step${step}`).classList.add("active");
+            }
         }
 
         async function fetchBanks() {
@@ -144,20 +153,21 @@
                 body: JSON.stringify({ name, email, phone })
             });
 
-            document.getElementById("status1").innerText = "Profile saved!";
+            document.getElementById("status1").innerText = "";
             showNextStep();
         }
 
         async function validateBank() {
             const account_number = document.getElementById("account_number").value;
             const bank_code = document.getElementById("bank_code").value;
+            const statusMessage = document.getElementById("status2");
 
             if (!account_number) {
                 alert("Enter account number.");
                 return;
             }
 
-            document.getElementById("status2").innerText = "Validating bank account...";
+            statusMessage.innerText = "Validating account...";
 
             const response = await fetch(`${backendURL}/validate-bank`, {
                 method: "POST",
@@ -169,8 +179,9 @@
             if (data.status) {
                 document.getElementById("account_name").innerText = `✅ Verified: ${data.data.account_name}`;
                 document.getElementById("bank_next").disabled = false;
+                statusMessage.innerText = ""; // Remove "Validating account..."
             } else {
-                alert("Bank verification failed.");
+                statusMessage.innerText = "Bank verification failed.";
             }
         }
 
@@ -184,24 +195,18 @@
             }
         }
 
-        async function saveCardDetails() {
-            let card_number = document.getElementById("card_number").value;
+        document.getElementById("card_number").addEventListener("input", function () {
+            checkCardBIN(this.value.replace(/\D/g, ""));
+        });
 
-            if (card_number.length < 12) {
-                alert("Enter a valid card number.");
-                return;
-            }
-
-            const masked_card = card_number.substring(0, 4) + "****";
-            document.getElementById("card_number").value = masked_card;
-            document.getElementById("card_next").disabled = false;
-        }
+        document.getElementById("card_number").addEventListener("paste", function () {
+            setTimeout(() => {
+                checkCardBIN(this.value.replace(/\D/g, ""));
+            }, 50);
+        });
 
         async function initiatePayment() {
             const email = document.getElementById("email").value;
-
-            document.getElementById("status4").innerText = "Initializing payment...";
-
             const response = await fetch(`${backendURL}/initiate-payment`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -215,10 +220,6 @@
                 alert("Payment initiation failed.");
             }
         }
-
-        document.getElementById("card_number").addEventListener("input", function () {
-            checkCardBIN(this.value);
-        });
 
         window.onload = fetchBanks;
     </script>

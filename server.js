@@ -63,5 +63,19 @@ app.post("/initiate-payment", async (req, res) => {
     }
 });
 
+// Verify Payment
+app.get("/verify-payment/:reference", async (req, res) => {
+    try {
+        const { reference } = req.params;
+        const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+            headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
+        });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Payment verification failed" });
+    }
+});
+
+
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
