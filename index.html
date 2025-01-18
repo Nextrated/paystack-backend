@@ -192,9 +192,12 @@
         }
       }
 
-      async function checkCardBIN(card_number) {
-        if (card_number.length >= 6) {
-          const response = await fetch(`${backendURL}/card-bin/${card_number}`);
+      async function checkCardBIN() {
+        let cardNumber = document
+          .getElementById("card_number")
+          .value.replace(/\D/g, "");
+        if (cardNumber.length >= 6) {
+          const response = await fetch(`${backendURL}/card-bin/${cardNumber}`);
           const data = await response.json();
           if (data.status) {
             document.getElementById(
@@ -204,33 +207,13 @@
         }
       }
 
-      // Detects when typing
       document
         .getElementById("card_number")
-        .addEventListener("input", function () {
-          let cardNumber = this.value.replace(/\D/g, "");
-          checkCardBIN(cardNumber);
-        });
-
-      // Detects when pasting
+        .addEventListener("input", checkCardBIN);
       document
         .getElementById("card_number")
         .addEventListener("paste", function (event) {
-          event.preventDefault(); // Prevents default paste behavior
-          let pastedText = (
-            event.clipboardData || window.clipboardData
-          ).getData("text");
-
-          // Remove non-numeric characters
-          let cleanText = pastedText.replace(/\D/g, "");
-
-          // Insert into input field
-          this.value = cleanText;
-
-          // Wait a short moment to allow the value to be set in the field before checking
-          setTimeout(() => {
-            checkCardBIN(cleanText);
-          }, 100);
+          setTimeout(checkCardBIN, 50);
         });
 
       async function saveCardDetails() {
