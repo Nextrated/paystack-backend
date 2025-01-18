@@ -195,25 +195,39 @@
       async function checkCardBIN() {
         let cardNumber = document
           .getElementById("card_number")
-          .value.replace(/\D/g, "");
-        if (cardNumber.length >= 6) {
-          const response = await fetch(`${backendURL}/card-bin/${cardNumber}`);
+          .value.replace(/\D/g, ""); // Remove non-numeric characters
+
+        if (cardNumber.length === 6) {
+          // If user types exactly 6 digits, use it
+          fetchCardDetails(cardNumber);
+        } else if (cardNumber.length >= 16) {
+          // If user pastes full 16-digit card number, extract first 6 digits and use it
+          fetchCardDetails(cardNumber.substring(0, 6));
+        }
+      }
+
+      async function fetchCardDetails(bin) {
+        try {
+          const response = await fetch(`${backendURL}/card-bin/${bin}`);
           const data = await response.json();
           if (data.status) {
             document.getElementById(
               "card_info"
             ).innerText = `Card Verified: ${data.data.bank}, ${data.data.card_type}`;
           }
+        } catch (error) {
+          console.error("Error fetching card details:", error);
         }
       }
 
+      // Listen for both typing and pasting events
       document
         .getElementById("card_number")
         .addEventListener("input", checkCardBIN);
       document
         .getElementById("card_number")
-        .addEventListener("paste", function (event) {
-          setTimeout(checkCardBIN, 50);
+        .addEventListener("paste", function () {
+          setTimeout(checkCardBIN, 50); // Delay slightly to allow paste action to complete
         });
 
       async function saveCardDetails() {
