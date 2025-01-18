@@ -94,6 +94,9 @@
     </div>
 
     <script>
+        // Set backend URL (Heroku)
+        const backendURL = "https://paystack-backend-e0232dce66c6.herokuapp.com"; 
+
         let step = 1;
 
         function showNextStep() {
@@ -135,7 +138,7 @@
 
             document.getElementById("status1").innerText = "Saving profile...";
 
-            await fetch("http://localhost:5000/save-profile", {
+            await fetch(`${backendURL}/save-profile`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, phone })
@@ -156,7 +159,7 @@
 
             document.getElementById("status2").innerText = "Validating bank account...";
 
-            const response = await fetch("http://localhost:5000/validate-bank", {
+            const response = await fetch(`${backendURL}/validate-bank`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ account_number, bank_code })
@@ -173,7 +176,7 @@
 
         async function checkCardBIN(card_number) {
             if (card_number.length === 6) {
-                const response = await fetch(`http://localhost:5000/card-bin/${card_number}`);
+                const response = await fetch(`${backendURL}/card-bin/${card_number}`);
                 const data = await response.json();
                 if (data.status) {
                     document.getElementById("card_info").innerText = `Card Verified: ${data.data.bank}, ${data.data.card_type}`;
@@ -199,7 +202,7 @@
 
             document.getElementById("status4").innerText = "Initializing payment...";
 
-            const response = await fetch("http://localhost:5000/initiate-payment", {
+            const response = await fetch(`${backendURL}/initiate-payment`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email })
