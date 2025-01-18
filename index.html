@@ -196,7 +196,7 @@
         let cardNumber = document
           .getElementById("card_number")
           .value.replace(/\D/g, "");
-        if (cardNumber.length >= 6) {
+        if (cardNumber.length === 16) {
           const response = await fetch(`${backendURL}/card-bin/${cardNumber}`);
           const data = await response.json();
           if (data.status) {
