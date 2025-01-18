@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Profile - Paystack API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .step {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        .status {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Complete Your Profile</h2>
+
+        <!-- Step 1: Personal Info -->
+        <div class="step active" id="step1">
+            <h3>Step 1: Personal Information</h3>
+            <input type="text" id="name" placeholder="Full Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="text" id="phone" placeholder="Phone Number" required>
+            <button onclick="saveProfile()">Next</button>
+            <p class="status" id="status1"></p>
+        </div>
+
+        <!-- Step 2: Bank Account -->
+        <div class="step" id="step2">
+            <h3>Step 2: Bank Account</h3>
+            <select id="bank_code">
+                <option value="">Loading banks...</option>
+            </select>
+            <input type="text" id="account_number" placeholder="Enter Account Number" required>
+            <button onclick="validateBank()">Verify</button>
+            <p id="account_name"></p>
+            <button onclick="showNextStep()" id="bank_next" disabled>Next</button>
+            <p class="status" id="status2"></p>
+        </div>
+
+        <!-- Step 3: Card Details -->
+        <div class="step" id="step3">
+            <h3>Step 3: Card Details</h3>
+            <input type="text" id="card_number" placeholder="Enter Card Number" required>
+            <p id="card_info"></p>
+            <button onclick="saveCardDetails()">Save Card</button>
+            <button onclick="showNextStep()" id="card_next" disabled>Next</button>
+            <p class="status" id="status3"></p>
+        </div>
+
+        <!-- Step 4: Payment -->
+        <div class="step" id="step4">
+            <h3>Step 4: Payment</h3>
+            <button onclick="initiatePayment()">Pay ₦400</button>
+            <p class="status" id="status4"></p>
+        </div>
+    </div>
+
+    <script>
+        let step = 1;
+
+        function showNextStep() {
+            document.getElementById(`step${step}`).classList.remove("active");
+            step++;
+            document.getElementById(`step${step}`).classList.add("active");
+        }
+
+        async function fetchBanks() {
+            const response = await fetch("https://api.paystack.co/bank", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer YOUR_SECRET_KEY`
+                }
+            });
+
+            const data = await response.json();
+            if (data.status) {
+                const bankSelect = document.getElementById("bank_code");
+                bankSelect.innerHTML = ""; 
+                data.data.forEach(bank => {
+                    const option = document.createElement("option");
+                    option.value = bank.code;
+                    option.textContent = bank.name;
+                    bankSelect.appendChild(option);
+                });
+            }
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const phone = document.getElementById("phone").value;
+
+            if (!name || !email || !phone) {
+                alert("All fields are required.");
+                return;
+            }
+
+            document.getElementById("status1").innerText = "Saving profile...";
+
+            await fetch("http://localhost:5000/save-profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, phone })
+            });
+
+            document.getElementById("status1").innerText = "Profile saved!";
+            showNextStep();
+        }
+
+        async function validateBank() {
+            const account_number = document.getElementById("account_number").value;
+            const bank_code = document.getElementById("bank_code").value;
+
+            if (!account_number) {
+                alert("Enter account number.");
+                return;
+            }
+
+            document.getElementById("status2").innerText = "Validating bank account...";
+
+            const response = await fetch("http://localhost:5000/validate-bank", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ account_number, bank_code })
+            });
+
+            const data = await response.json();
+            if (data.status) {
+                document.getElementById("account_name").innerText = `✅ Verified: ${data.data.account_name}`;
+                document.getElementById("bank_next").disabled = false;
+            } else {
+                alert("Bank verification failed.");
+            }
+        }
+
+        async function checkCardBIN(card_number) {
+            if (card_number.length === 6) {
+                const response = await fetch(`http://localhost:5000/card-bin/${card_number}`);
+                const data = await response.json();
+                if (data.status) {
+                    document.getElementById("card_info").innerText = `Card Verified: ${data.data.bank}, ${data.data.card_type}`;
+                }
+            }
+        }
+
+        async function saveCardDetails() {
+            let card_number = document.getElementById("card_number").value;
+
+            if (card_number.length < 12) {
+                alert("Enter a valid card number.");
+                return;
+            }
+
+            const masked_card = card_number.substring(0, 4) + "****";
+            document.getElementById("card_number").value = masked_card;
+            document.getElementById("card_next").disabled = false;
+        }
+
+        async function initiatePayment() {
+            const email = document.getElementById("email").value;
+
+            document.getElementById("status4").innerText = "Initializing payment...";
+
+            const response = await fetch("http://localhost:5000/initiate-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+            if (data.status) {
+                window.location.href = data.data.authorization_url;
+            } else {
+                alert("Payment initiation failed.");
+            }
+        }
+
+        document.getElementById("card_number").addEventListener("input", function () {
+            checkCardBIN(this.value);
+        });
+
+        window.onload = fetchBanks;
+    </script>
+
+</body>
+</html>
