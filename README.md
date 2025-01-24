@@ -9,13 +9,12 @@ This is a **simple payment integration platform** built with **HTML, JavaScript,
 
 ## 🌐 **Live Demo**
 🔗 **Frontend (Netlify)**: [https://packstack-completeprofile.netlify.app/]  
-🔗 **Backend (Heroku)**: [https://paystack-backend-e0232dce66c6.herokuapp.com](#)  
 
 ## 🛠️ **Tech Stack**
 - **Frontend**: HTML, CSS, JavaScript
 - **Backend**: Node.js, Express
 - **API Integration**: Paystack API
-- **Hosting**: Netlify (Frontend), Heroku (Backend)
+- **Hosting**: Netlify (Frontend), Render (Backend)
 
 ## 🔌 **Paystack APIs Used**
 This project integrates multiple Paystack API endpoints:  
@@ -34,6 +33,6 @@ This project integrates multiple Paystack API endpoints:
 
 ## 🚀 **Deployment**
 - **Frontend** is deployed on **Netlify**.
-- **Backend** is deployed on **Heroku**.
+- **Backend** is deployed on **Render**.
 
 
